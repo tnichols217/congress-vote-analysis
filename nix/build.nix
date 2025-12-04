@@ -24,8 +24,15 @@ rustPlatform.buildRustPackage {
     lockFile = ../src/Cargo.lock;
   };
 
+  prebuild = ''
+    export PKG_CONFIG_PATH="${fontconfig}/lib/pkgconfig$\{PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  '';
+
   nativeBuildInputs = [
     pkg-config
+  ];
+
+  buildInputs = [
     fontconfig
   ];
 

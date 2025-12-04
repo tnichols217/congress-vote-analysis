@@ -7,8 +7,3 @@ mermaid:
   htmlLabels: false
 format:
   pdf: {}
-# execute:
-  # cache: true
-brand:
-  light: _brand.yml
-  dark: _brand.yml
