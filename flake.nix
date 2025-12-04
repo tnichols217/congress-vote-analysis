@@ -19,11 +19,21 @@
       system:
       let
         pkgs = import inputs.nixpkgs { inherit system; };
-        pkgs_static =
-          (import inputs.nixpkgs {
-            inherit system;
-            static = true;
-          }).pkgsMusl;
+        pythonPkg = pythonPackages:
+          with pythonPackages; [
+            ipykernel
+            pandas
+            pip
+            numpy
+            scipy
+            sympy
+            matplotlib
+            pyyaml
+            nbformat
+            nbclient
+            jupyter
+            seaborn
+          ];
 
         treefmtconfig = inputs.treefmt-nix.lib.evalModule pkgs {
           projectRootFile = "flake.nix";
@@ -50,6 +60,12 @@
                 rustPlatform.rustLibSrc
                 rust-analyzer
                 librsvg
+                (python3.withPackages pythonPkg)
+                quarto
+                texliveFull
+                texworks
+                texstudio
+                typst
               ]
               ++ packages.build.nativeBuildInputs
             );
@@ -62,6 +78,7 @@
         };
         packages = rec {
           build = (pkgs.callPackage ./nix/build.nix {});
+          report = (pkgs.callPackage ./nix/report.nix { inherit pythonPkg; });
           default = build;
         };
       }

@@ -1,0 +1,157 @@
+---
+jupyter: python3
+---
+
+**PART A**
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+red = pd.read_csv("winequality-red.csv", sep=";")
+white = pd.read_csv("winequality-white.csv", sep=";")
+
+def label(df):
+    df = df.copy()
+    df["good"] = (df["quality"] >= 6).astype(int)
+    return df
+
+red = label(red)
+white = label(white)
+
+red.head(), white.head()
+```
+
+```{python}
+plt.figure(figsize=(12,5))
+
+plt.subplot(1, 2, 1)
+sns.countplot(x=red["quality"])
+plt.title("Red Wine: Original Quality Distribution")
+plt.xlabel("Quality")
+plt.ylabel("Count")
+
+plt.subplot(1, 2, 2)
+sns.countplot(x=white["quality"])
+plt.title("White Wine: Original Quality Distribution")
+plt.xlabel("Quality")
+plt.ylabel("Count")
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+plt.figure(figsize=(12,5))
+
+plt.subplot(1, 2, 1)
+sns.countplot(x=red["good"])
+plt.title("Red Wine: Discretized")
+plt.xlabel("Good (0 = no, 1 = yes)")
+plt.ylabel("Count")
+
+plt.subplot(1, 2, 2)
+sns.countplot(x=white["good"])
+plt.title("White Wine: Discretized")
+plt.xlabel("Good (0 = no, 1 = yes)")
+plt.ylabel("Count")
+
+plt.tight_layout()
+plt.show()
+```
+
+**PART B**
+
+```{python}
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+#split input features and output label "good"
+#remove quality feature because we discretized
+X_red = red.drop(["quality", "good"], axis=1)
+y_red = red["good"]
+
+X_white = white.drop(["quality", "good"], axis=1)
+y_white = white["good"]
+
+#training and testing split 80/20
+Xr_train, Xr_test, yr_train, yr_test = train_test_split(
+    X_red, y_red, test_size=0.2, random_state=0
+)
+
+Xw_train, Xw_test, yw_train, yw_test = train_test_split(
+    X_white, y_white, test_size=0.2, random_state=0
+)
+
+#downsample white wine data, combine input and output
+#then randomly sample same number of samples as red wine data
+white_train = pd.concat([Xw_train, yw_train], axis=1)
+white_downsampled = white_train.sample(len(Xr_train), random_state=0)
+
+Xw_train_downsampled = white_downsampled.drop("good", axis=1)
+yw_train_downsampled = white_downsampled["good"]
+```
+
+```{python}
+log_reg = LogisticRegression(max_iter=2000)
+knn = KNeighborsClassifier(n_neighbors=6)
+
+def evaluate(model, X_train, y_train, X_test, y_test):
+    model.fit(X_train, y_train)
+    preds = model.predict(X_test)
+    return {
+        "accuracy": accuracy_score(y_test, preds),
+        "precision": precision_score(y_test, preds),
+        "recall": recall_score(y_test, preds),
+    }
+
+results = {}
+
+#IN-DOMAIN TESTING
+#Logistic Regression
+results["Logistic regression red & red"] = evaluate(log_reg, Xr_train, yr_train, Xr_test, yr_test)
+results["Logistic regression white & white"] = evaluate(log_reg, Xw_train_downsampled, yw_train_downsampled, Xw_test, yw_test)
+#kNN
+results["kNN red & red"] = evaluate(knn, Xr_train, yr_train, Xr_test, yr_test)
+results["kNN white & white"] = evaluate(knn, Xw_train_downsampled, yw_train_downsampled, Xw_test, yw_test)
+
+#CROSS-DOMAIN TESTING
+#Logistic Regression
+results["Logistic regression red & white"] = evaluate(log_reg, Xr_train, yr_train, Xw_test, yw_test)
+results["Logistic regression white & red"] = evaluate(log_reg, Xw_train_downsampled, yw_train_downsampled, Xr_test, yr_test)
+# kNN
+results["kNN red & white"] = evaluate(knn, Xr_train, yr_train, Xw_test, yw_test)
+results["kNN white & red"] = evaluate(knn, Xw_train_downsampled, yw_train_downsampled, Xr_test, yr_test)
+
+results
+
+#display results in a clearer format
+df_results = pd.DataFrame(results).T
+df_results
+```
+
+**PART C**
+
+```{python}
+df_plot = df_results.copy()
+df_plot["experiment"] = df_plot.index
+
+plt.figure(figsize=(12,6))
+sns.barplot(
+    data=df_plot,
+    x="experiment",
+    y="accuracy",
+)
+
+plt.title("Model Accuracy Across In-Domain and Cross-Domain Settings")
+plt.xlabel("Settings")
+plt.ylabel("Accuracy")
+plt.xticks(rotation=45, ha="right")
+plt.ylim(0, 1)
+plt.tight_layout()
+plt.show()
+```

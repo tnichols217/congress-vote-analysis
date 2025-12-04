@@ -111,6 +111,7 @@ The visualization provided shows a bar chart comparing performance across domain
 
 ## Code
 
-All code is provided as part of this zip or at the following google collab link:
+All code is provided as part of this zip or at the following google collab link or GitHub:
 
-https://colab.research.google.com/drive/1BddFhgFzfe55u3ouuO5G9Vc3Si-u4Rcp
+- https://colab.research.google.com/drive/1BddFhgFzfe55u3ouuO5G9Vc3Si-u4Rcp
+- https://github.com/tnichols217/congress-vote-analysis

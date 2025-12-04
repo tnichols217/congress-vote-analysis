@@ -38,6 +38,6 @@ stdenv.mkDerivation {
   '';
   installPhase = ''
     mkdir -p $out
-    cp -r _output/* $out
+    cp -r _output/*.pdf $out
   '';
 }

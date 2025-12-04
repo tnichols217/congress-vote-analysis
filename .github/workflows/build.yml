@@ -1,0 +1,25 @@
+name: Releases
+on:
+  push:
+    tags:
+      - "release-*"
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+      - name: Build Project
+        shell: bash
+        run: |
+          nix build .#report
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "result/*"
