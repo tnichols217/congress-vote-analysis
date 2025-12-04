@@ -1,0 +1,116 @@
+---
+title: Clustering, Dimensionality Reduction, and Predictive Modeling
+subtitle: CSDS 313/413 - Fall 2025
+author: Ashley Chen and Trevor Nichols
+---
+
+## Abstract
+
+In this report we explore various methods of analysing high dimensional data. We utilize multiple clustering and dimensionality reduction methods in order to see which are sufficient for the analysis of our data.
+
+## Task 1
+
+### Part A
+
+In this section we performed PCA on the votes of Congress. After importing the data, we mapped each value into a number representing the vote before running the PCA.
+
+![Explainability per PCA Component](./variance.svg)
+
+We decided that overall, 3 PCA components was sufficient for providing insightful prediction as we notice the amount our variance diminishes across PCAs to be significantly reduced.
+
+With Republicans as red and Democrats as Blue the following are plots of our first 3 principled components
+
+::: {layout="[0.33, 0.33, 0.33]"}
+::: {.column}
+![PC 1 vs. PC 2](./pc1_pc2.svg)
+:::
+::: {.column}
+![PC 1 vs. PC 3](./pc1_pc3.svg)
+:::
+::: {.column}
+![PC 2 vs. PC 3](./pc2_pc3.svg)
+:::
+:::
+
+As seen in our PC plots, we can see high separability in our PC 1 vs. PC 2 plot, as expected. This should show high correlation to party leaning Later.
+
+### Parts B and C
+
+We utilized KMeans clustering upon both the original dataset and upon our principled components in order to see how well our model can predict party affiliation.
+
+::: {layout="[0.33, 0.33, 0.33]"}
+::: {.column}
+![Actual Party Affiliation](./pc1_pc2.svg)
+:::
+::: {.column}
+![KMeans Predicted Affiliation based on PCA](./kmeans_pc1_pc2.svg)
+:::
+::: {.column}
+![KMeans Predicted Affiliation based on raw Vote](./kmeans_raw.svg)
+:::
+:::
+
+As seen in the plots, we believe our prediction mostly lines up with the actual party leanings, leading us to believe that our PCA and clustering analysis was sufficient for understanding how the representatives voted.
+
+We additionally performed permutation tests to see the significance of our clustering in comparison with the actual party affiliation as well as mutual information to check the validity of our clustering.
+
+```
+Permutation Test for PCA:
+Original inertia: 3.3625
+Permutation scores (first 10): [14.041513051054507, 14.09441272876759, 14.088084484134555, 14.061213738157855, 14.02328515210578, 14.067508462134668, 14.077203351721701, 14.0604472630176, 14.060226380753663, 14.089828686185218]
+p-value: 0.0050
+Permutation Test for Raw:
+Original inertia: 8.6973
+Permutation scores (first 10): [14.055660507052194, 14.06223860100806, 14.062076836344803, 14.085836516277592, 14.054802335681046, 14.052711052608375, 14.069286772352886, 14.04951126459097, 14.088717596716133, 14.079325293559357]
+p-value: 0.0050
+Mutual information between clusters and parties PCA: 0.3282
+Mutual information between clusters and parties Raw: 0.3417
+```
+
+As seen in our test outputs, both are highly significant in respect to the permutation test. Performing the clustering on the original data proved to be slightly more accurate at predicting party affiliation as compared to our PCA analysis. We believe this is due to there being more data available, as PCA reduces the actual fidelity and dimensionality of the data, allowing for easier interpretation.
+
+## Task 2
+
+### Part A
+
+Discretized the quality scores by setting qualities <= 5 to 0 (not good) and qualities >= 6 to 1 (good). A new column "good" was made to store this value.
+
+Original quality scores were plotted, showing the count of wines that fall under each quality integer score.
+
+![](./a1.png)
+
+Discretized distributions were plotted. 0 means not good, 1 means good. The plots show the counts of wines that fall under good or not good.
+
+![](./a2.png)
+
+We discretized the wine quality scores into two classes using a threshold of quality greater than or equal to 6 as the "good" wines and scores less than or equal to 5 as "not good" wines. This threshold gives us a clear interpretation of the wine quality, while still having somewhat of a class balance, as seen in the discretized distribution visualization. Although the red wine class balance is better, we applied this threshold on both to be consistent. The original distribution was mostly concentrated around quality scores of 5 or 6, so splitting it there gives us two groups without one being too small. 
+
+### Part B
+
+First, we split the data into input features and the output "good" into x and y. We used an 80/20 split for training and testing. In order to downsample the white wine data, we randomly chose samples, with the number of samples matching the red wine data.
+
+Using logistic regression and k-Nearest Neighbors (for kNN, we used k=7 as a middle-range value and because it gave pretty strong results) as the two classification models, in-domain (train on red, test on red, train on white, test on white) and cross-domain (train on red, test on white, train on white, test on red) were performed. For each scenario, accuracy, precision, and recall were computed.
+
+The result is shown below:
+
+![](./a4.png)
+
+### Part C
+
+For in-domain settings, k-Nearest Neighbors was more consistent. For kNN, the accuracy only changed slightly from 0.6156 to 0.6408 while for Logistic Regression there was a bigger difference between 0.7112 and 0.7531. 
+
+The Logistic Regression model didn't show signs of overfitting. The accuracy for cross-domain settings is pretty similar to the in-domain settings accuracy (0.753 vs 0.663, 0.711 vs 0.737). However, kNN showed signs of overfitting due to the huge drop in accuracy when cross-domain testing. It shows that the kNN model might be overfitting to the training data.
+
+Logistic Regression generalized better across wine types. Its accuracy changed only moderately when changing to cross-domain settings from in-domain. On the other hand, kNN had huge accuracy drops when changing to cross-domain settings, which was discussed earlier along with overfitting. These results show that Logistic Regression is better at capturing the relationships between wine types. 
+
+Possible factors might be the distribution shift between red and white wines. Their properties (chemical, acidity, etc.) differ, so models that are trained on one wine type might get inaccurate results for another type of wine. Additionally, there is a label imbalance for the white wine data; there are more "good" wines than "not good". So, the model might see more positive examples while training which can affect how it performs.
+
+The visualization provided shows a bar chart comparing performance across domains and testing scenarios.
+
+![](./a3.png)
+
+## Code
+
+All code is provided as part of this zip or at the following google collab link:
+
+https://colab.research.google.com/drive/1BddFhgFzfe55u3ouuO5G9Vc3Si-u4Rcp

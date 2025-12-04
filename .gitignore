@@ -1,0 +1,9 @@
+result
+.direnv
+target
+out
+.quarto
+_output
+*.pdf
+*.html
+.gitignore
